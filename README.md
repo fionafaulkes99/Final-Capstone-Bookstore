@@ -37,4 +37,4 @@ Otherwise, it prints the ID, title, author, and quantity of each book.
 4. Delete Books
 The delete_books() function allows the user to delete books from the database based on different criteria.
 The user is presented with options to delete books by ID, title, or author.
-After selecting the deletion criteria and providing the required information,
+After selecting the deletion criteria and providing the required information.
