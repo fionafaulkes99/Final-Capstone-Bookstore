@@ -1,6 +1,6 @@
 #=====Import Libraries======
 import sqlite3
-#=====Initalizes Database========
+#=====Initalises Database========
 
 db = sqlite3.connect('ebookstore_db')
 cursor = db.cursor()
