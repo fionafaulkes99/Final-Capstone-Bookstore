@@ -1,0 +1,206 @@
+#=====Import Libraries======
+import sqlite3
+#=====Initalizes Database========
+
+db = sqlite3.connect('ebookstore_db')
+cursor = db.cursor()
+
+def init_db():
+    try:
+        cursor.execute('''SELECT name FROM sqlite_master WHERE type='table' AND name='books' ''')
+        result = cursor.fetchone()
+        if result is None:
+            cursor.execute('''CREATE TABLE books(id INTEGER PRIMARY KEY NOT NULL, Title TEXT, Author TEXT, QTY INTEGER)''')
+                    
+            books =[(3001, "A Tale of Two Cities", "Charles Dickens", 30),
+                (3002, "Harry Potter and the Philosopher's Stone", "J.K Rowling", 40),
+                (3003, "The Lion, the Witch and Wardrobe", "C.S Lewis", 37),
+                (3004, "Alice in Wonderland", "Lewis Carroll", 12)]
+            for book in books:
+                cursor.execute('''INSERT INTO books(id, Title, Author, QTY) VALUES (?, ?, ? ,?)''', book)
+            db.commit()
+        else:
+            print("Table already exists, skipping creation! ")
+    except Exception as e:
+        print(f"An error occured while initalizing the database: {e}")
+    ''''  The function first executes the SQL SELECT statement to check if a table named books
+    already exists in the database. If the result is None then it excutes the SQL CREATE TABLE statement.
+    The function then populates the books table with some data by executin a SQL INSERT INTO statement in a loop. 
+    Finally, the function commits the charges to the database using the db.commit() method.'''
+
+init_db()
+#=====Outside Functions=====
+def add_books():
+ try:
+    id =input("Enter id of books:")
+    title = input("Enter title of books:")
+    author = input("Enter author's name:")
+    qty = input("Enter the Quatity of books in stock:")
+    
+    cursor.execute('''INSERT INTO books(id, Title, Author, QTY)
+                      VALUES(?,?,?,?)''', (id, title, author, qty) )
+    db.commit()
+   
+    print(f"Book with id:{id}, Title:{title}, Author:{author}, Quantity:{qty} has been successfullly added to database.")
+ except Exception as e:
+     print(f"An error occured while adding a book to the database: {e}")
+    
+'''The function above asks user for the id title author quantity of book usinf the SQL INSERT INTO and following by db.commit.
+It then prints out a message with book fields filled.'''
+    
+
+def update_books():
+  try:
+    id = input("Enter the id of the books to Update:")
+    field = str(input("Enter the field you want to update('title', 'author', 'quantity', 'all'):")).lower()
+    
+    if field == 'title':
+        new_value = str(input("Enter the New Title for books:")).lower()
+        cursor.execute('''UPDATE books SET title = ? WHERE id =?''', (new_value, id))
+    elif field == 'author':
+        new_value = str(input("Enter the New Author for books:")).lower()
+        cursor.execute('''UPDATE books SET author = ? Where id =?''', (new_value, id))
+    elif field == 'quantity':
+        new_value = int(input("Enter the New Quantity of books:"))   
+        cursor.execute('''UPDATE books SET qty = ? WHERE id=?''', (new_value, id,))
+    elif field == 'all':
+        new_title = str(input("Enter the New Title for books:")).lower()
+        new_author = str(input("Enter the New Author for books:")).lower()
+        new_qty = int(input("Enter the New Quantity of books:")) 
+        cursor.execute('''UPDATE books SET title= ?, author=?, qty=? WHERE id=?''', (new_title, new_author, new_qty, id),)
+    else:
+        print("Invalid Input!")
+    db.commit()
+    print(f"The book with ID {id} has been successfully updated!")
+  except Exception as e:
+      print(f"An error occured while updating the database: {e}")
+      
+'''The above function asks for user to enter the id and the field they want update then asks for new value or if they want to update all. 
+Using SQL UPDATE it then updates the fields and prints a message on success of that operation.'''
+
+
+def print_all_books():
+  try:
+    cursor.execute('''SELECT * FROM books''')
+    books = cursor.fetchall()
+    if len(books) == 0:
+        print("No books found!")
+    else:
+        for books in books:
+            print(f"ID:{books[0]}")
+            print(f"Title:{books[1]}")
+            print(f"Author:{books[2]}")
+            print(f"Quantity:{books[3]}")
+            print("---------------")
+  except Exception as e:
+      print(f"An error occured while retreiving from the database: {e}")
+            
+''' The above function executes a SQL query to select all books from the database. It fetches all rows
+returned by the query and store them in books variabe. If no books found it prints a message indicating this.
+Otherwise , it will loopthrugh each book and print its details'''
+            
+
+
+def delete_books():
+    print("How would like to delete the books?")
+    print("1 - id")
+    print("2 - Title")
+    print("3 - Author")
+    
+    try:
+      choice = int(input("Enter the option:"))
+      if choice not in [1, 2, 3]:
+          print("Invalid Input!")
+          return
+    except ValueError:
+        print("Invalid Input! Please enter a number.")
+    try:
+        if choice == 1:
+            try:
+                id = int(input("Enter the id of books to be deleted:"))
+            except ValueError:
+               print("Invalid Input! Please enter a number.")
+            cursor.execute('''DELETE FROM books WHERE id = ?''', (id,))
+            db.commit()
+            print(f"Successfully Deleted where books id is {id}.")
+        elif choice == 2:
+            title = input("Enter the title of books to be deleted:").lower()
+            cursor.execute('''DELETE FROM books WHERE title = ?''', (title,))
+            db.commit()
+            print(f"Successfully Deleted where books Title is {title}.")
+        elif choice == 3:
+            author = input("Enter the author of books to be deleted:").lower()
+            cursor.execute('''DELETE FROM books WHERE author = ?''', (author,))
+            db.commit()
+            print(f"Successfully Deleted wherebooks Title is {author}.")
+    except Exception as e:
+            print("Error", e)
+            db.rollback()
+            return
+'''The function above first displays options for deletion and prompts the user to select one. 
+Then, depending on the user's choice it prompts for the revelant information(book, title or author) and executes the
+SQL DELETE statement on the books table with appropriate condition. Finally printing a meesage on the success of operation.'''
+        
+
+def search_books():
+    term = str(input("Enter the term for the books you which to search:")).lower()
+    try:
+        cursor.execute('''SELECT * FROM books WHERE Title LIKE ? OR Author LIKE ?''',('%'+term+'%','%'+term+'%'))
+        results = cursor.fetchall()
+        if len(results) == 0:
+            print("No matching term found!")
+        else:
+            for books in results:
+                print(f"ID:{books[0]}")
+                print(f"Title:{books[1]}")
+                print(f"Author:{books[2]}")
+                print(f"Quantity:{books[3]}")
+    except sqlite3.Error as error:
+        print("Error searching for books", error)
+
+''' The above function asks the user for what term they would like converting the input into lowercase.
+Using SQL logic it searches for the entered term in Title and Author. The query uses Like operator to match partial string 
+matches with the search term wraped in % signs allowing for matches in partial string. If no 
+result is found it prints a message. Otherwise the function uses a loop to iterrate throught the list of 
+results returned the query printing id , Title, Author, Quantity.
+'''
+          
+#=====Main Menu======
+def main_choice():
+    print("====books Database Menu====")
+    print("1 - Enter New books")
+    print("2 - Update books")
+    print("3 - Display Database")
+    print("4 - Delete books")
+    print("5 - Search books")
+    print("0 - Exit")
+    
+    while True:
+      try:
+        choice = int(input("Enter the number of menu:"))
+        if choice == 1:
+            add_books()
+        elif choice == 2:
+            update_books()
+        elif choice == 3:
+            print_all_books()
+        elif choice == 4:
+            delete_books()
+        elif choice == 5:
+            search_books()
+        elif choice == 0:
+            print("Exit programme. Goodbye!")
+            break
+        else:
+            print("Invalid Entry! Enter a numbe between 0 - 5!")
+      except ValueError:
+          print("Invalid Entry! Enter a numbe between 0 - 5!")
+
+# The following code will only run if the script is being executed as the main program.
+# The main_choice() is the main entry point of the programme where the user interacts to select the desired function.
+# The init_db() function is called to initialize the database.
+# The db connection is closed after programme has finished executing.
+if __name__=='__main__':
+    main_choice()
+    init_db
+    db.close()
